@@ -1,9 +1,19 @@
 import subprocess
 import re
 import logging
+from datetime import datetime
 
-# Configure logging
-logging.basicConfig(filename='dns_monitoring.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Define the path to the logs folder
+logs_folder = 'logs/'
+
+# Ensure the folder path ends with a slash
+if not logs_folder.endswith('/'):
+    logs_folder += '/'
+
+# Configure logging with a more readable timestamp format
+current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+log_filename = f'{logs_folder}dns_monitoring_{current_time}.log'
+logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # Load malicious domains from a file
 with open('malicious_domains.txt') as file:
@@ -30,6 +40,7 @@ process = subprocess.Popen(tshark_cmd, stdout=subprocess.PIPE, text=True)
 
 dns_activity = {}
 desired_types = {'A', 'AAAA', 'SRV', 'PTR'}
+detected_domains = set()
 
 try:
     print("Capturing DNS packets. Press Ctrl+C to stop and print activity summary.")
@@ -37,10 +48,15 @@ try:
         parsed_data = parse_tshark_line(line)
         if parsed_data:
             domain_name, record_type = parsed_data
+            domain_record_combo = (domain_name, record_type)
+
             if domain_name in malicious_domains:
-                alert_message = f"Malicious domain detected: {domain_name}, Type: {record_type}"
-                print(alert_message)
-                logging.warning(alert_message)  # Log the detection
+                if domain_record_combo not in detected_domains:
+                    alert_message = f"Malicious domain detected: {domain_name}, Type: {record_type}"
+                    print(alert_message)
+                    logging.warning(alert_message)  # Log the detection
+                    detected_domains.add(domain_record_combo)  # Add to detected set
+
             if record_type in desired_types:
                 if domain_name not in dns_activity:
                     dns_activity[domain_name] = {}
