@@ -2,11 +2,11 @@ import re
 import logging
 import ipaddress
 from datetime import datetime
-from freq3 import FreqCounter  # Assuming freq3.py is in the same directory
+from freq3 import FreqCounter  # Make sure freq3.py is accessible
 
 # Define the path to the DNS log file and top million domains file
 dns_log_file_path = '/var/log/named/dnsquery.log'
-top_domains_file_path = 'top-1m.csv'  # Update this path
+top_domains_file_path = 'path/to/cisco_top_million.csv'  # Update with the correct path
 
 # Define the path to the logs folder
 logs_folder = 'logs/'
@@ -44,21 +44,12 @@ def extract_domain_names(log_entry):
     return [match for match in matches if '.' in match and not is_ip_address(match)]
 
 def analyze_domain_frequency(domain):
-    # Example of a simple heuristic: check if the domain length is unusually long
-    if len(domain) > average_domain_length * 1.5:  # Replace with appropriate logic
-        logging.warning(f'Suspicious domain detected (based on length): {domain}')
-        return True
-
-    # You can add more heuristic checks here based on other characteristics
-
-    # Final check with the existing probability function
-    probability = freq_counter.probability(domain)
-    if probability < adjusted_threshold:  # adjusted_threshold to be determined
-        logging.warning(f'Suspicious domain detected (based on probability): {domain} - Probability: {probability}')
-        return True
+    average_domain_length = 15  # Example: adjust based on your analysis
+    if len(domain) > average_domain_length * 1.5:
+        return True  # Flag as suspicious
     else:
-        logging.info(f'Non-suspicious domain: {domain} - Probability: {probability}')
-        return False
+        # Integrate your freq3.py analysis logic here
+        return False  # Modify this line as per your analysis logic
 
 # Main loop to read and process the log file
 with open(dns_log_file_path, 'r') as log_file:
