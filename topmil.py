@@ -44,9 +44,21 @@ def extract_domain_names(log_entry):
     return [match for match in matches if '.' in match and not is_ip_address(match)]
 
 def analyze_domain_frequency(domain):
-    # Here implement your logic to analyze the domain frequency
-    # For example, using freq_counter.probability(domain)
-    return False  # Modify this line as per your analysis logic
+    # Example of a simple heuristic: check if the domain length is unusually long
+    if len(domain) > average_domain_length * 1.5:  # Replace with appropriate logic
+        logging.warning(f'Suspicious domain detected (based on length): {domain}')
+        return True
+
+    # You can add more heuristic checks here based on other characteristics
+
+    # Final check with the existing probability function
+    probability = freq_counter.probability(domain)
+    if probability < adjusted_threshold:  # adjusted_threshold to be determined
+        logging.warning(f'Suspicious domain detected (based on probability): {domain} - Probability: {probability}')
+        return True
+    else:
+        logging.info(f'Non-suspicious domain: {domain} - Probability: {probability}')
+        return False
 
 # Main loop to read and process the log file
 with open(dns_log_file_path, 'r') as log_file:
