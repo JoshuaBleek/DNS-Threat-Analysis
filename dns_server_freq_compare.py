@@ -26,7 +26,6 @@ freq_counter = FreqCounter()
 # Common domains and IPs to exclude
 common_domains = {"google.com", "nvidia.com", "microsoft.com", "gstatic.com", "in-addr.arpa"}  # Add more as needed
 
-# Function to check if a string is an IP address
 def is_ip_address(string):
     try:
         ipaddress.ip_address(string)
@@ -34,16 +33,13 @@ def is_ip_address(string):
     except ValueError:
         return False
 
-# Function to extract domain names from log entries
 def extract_domain_names(log_entry):
     pattern = r'\(([^)]+)\)'
     matches = re.findall(pattern, log_entry)
     return [match for match in matches if '.' in match and not is_ip_address(match) and match not in common_domains]
 
-# Adjust the threshold based on your observation and testing
 threshold = 20
 
-# Function to analyze domain name frequency
 def analyze_domain_frequency(domain):
     probability = freq_counter.probability(domain)
     if probability < threshold:
@@ -53,10 +49,24 @@ def analyze_domain_frequency(domain):
         logging.info(f'Non-suspicious domain: {domain} - Probability: {probability}')
         return False
 
+# Start of the script
+logging.info("Starting DNS log analysis.")
+
+# Counter for suspicious domains
+suspicious_count = 0
+
 # Main loop to read and process the log file
 with open(dns_log_file_path, 'r') as log_file:
     for line in log_file:
         domains = extract_domain_names(line)
         for domain in domains:
-            analyze_domain_frequency(domain)
+            if analyze_domain_frequency(domain):
+                suspicious_count += 1
 
+# End of the script
+if suspicious_count == 0:
+    logging.info("No suspicious activity detected.")
+else:
+    logging.info(f"Analysis complete. {suspicious_count} suspicious domains detected.")
+
+logging.info("DNS log analysis completed.")
