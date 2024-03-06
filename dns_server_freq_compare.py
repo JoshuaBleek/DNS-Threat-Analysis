@@ -41,13 +41,22 @@ def extract_domain_names(log_entry):
 threshold = 20
 
 def analyze_domain_frequency(domain):
+    # Example of a simple heuristic: check if the domain length is unusually long
+    if len(domain) > average_domain_length * 1.5:  # Replace with appropriate logic
+        logging.warning(f'Suspicious domain detected (based on length): {domain}')
+        return True
+
+    # You can add more heuristic checks here based on other characteristics
+
+    # Final check with the existing probability function
     probability = freq_counter.probability(domain)
-    if probability < threshold:
-        logging.warning(f'Suspicious domain detected: {domain} - Probability: {probability}')
+    if probability < adjusted_threshold:  # adjusted_threshold to be determined
+        logging.warning(f'Suspicious domain detected (based on probability): {domain} - Probability: {probability}')
         return True
     else:
         logging.info(f'Non-suspicious domain: {domain} - Probability: {probability}')
         return False
+
 
 # Start of the script
 logging.info("Starting DNS log analysis.")

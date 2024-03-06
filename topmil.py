@@ -6,7 +6,7 @@ from freq3 import FreqCounter  # Assuming freq3.py is in the same directory
 
 # Define the path to the DNS log file and top million domains file
 dns_log_file_path = '/var/log/named/dnsquery.log'
-top_domains_file_path = 'path/to/cisco_top_million.csv'  # Update this path
+top_domains_file_path = 'top-1m.csv'  # Update this path
 
 # Define the path to the logs folder
 logs_folder = 'logs/'
