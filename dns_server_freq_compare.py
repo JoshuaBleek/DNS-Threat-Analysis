@@ -33,13 +33,14 @@ def extract_domain_names(log_entry):
 
 # Function to analyze domain name frequency
 def analyze_domain_frequency(domain):
-    probability = freq_counter.measure_string_likelihood(domain)
-    # Define a threshold for suspicious domain names
-    threshold = 0.5  # This is an example value, adjust based on your requirements
+    # Assuming the domain name is a string and you want to measure its character pair frequency
+    probability = freq_counter.probability(domain)
+    threshold = 0.5  # Adjust this threshold based on your requirements
     if probability < threshold:
         return True  # Suspicious
     else:
         return False  # Not suspicious
+
 
 # Main loop to read and process the log file
 # This might need to be a continuous loop or a scheduled task
