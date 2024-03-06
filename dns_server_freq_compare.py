@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 # New imports for frequency analysis
-from freq import FreqCounter
+from freq3 import FreqCounter
 
 # Define the path to the DNS log file
 dns_log_file_path = '/var/log/named/dnsquery.log'
