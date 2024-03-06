@@ -25,11 +25,11 @@ freq_counter = FreqCounter()
 
 # Function to extract domain names from log entries
 def extract_domain_names(log_entry):
-    # Assuming the log entry contains the domain name in a recognizable pattern
-    # This pattern might need to be adjusted based on the actual log format
-    pattern = r'Some pattern to extract domain name'
+    # This pattern matches domain names within parentheses
+    pattern = r'\(([^)]+)\)'
     matches = re.findall(pattern, log_entry)
-    return matches
+    return [match for match in matches if '.' in match]  # Filter out non-domain strings
+
 
 # Function to analyze domain name frequency
 def analyze_domain_frequency(domain):
