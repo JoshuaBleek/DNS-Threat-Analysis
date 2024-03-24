@@ -46,7 +46,9 @@ def is_malformed_domain(domain):
 def extract_domain_names(log_entry):
     pattern = r'\(([^)]+)\)'
     matches = re.findall(pattern, log_entry)
-    return [match for match in matches if '.' in match and not is_ip_address(match)]
+    unique_domains = {match for match in matches if '.' in match and not is_ip_address(match)}
+    return unique_domains
+
 
 analyzed_domains = set()
 def analyze_domain(domain):
