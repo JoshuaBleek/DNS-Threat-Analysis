@@ -17,7 +17,7 @@ logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime
 # Initialize and load the frequency counter
 freq_counter = FreqCounter()
 # freq_counter.load('path_to_your_data_file')  # Load your frequency data
- 
+
 # Read the top-1m.csv file
 def read_top_domains(filename):
     with open(filename, newline='') as csvfile:
@@ -49,24 +49,29 @@ def extract_domain_names(log_entry):
     unique_domains = {match for match in matches if '.' in match and not is_ip_address(match)}
     return unique_domains
 
+logged_domains = set()  # Set to track domains with timestamps that have been logged
+def get_current_timestamp():
+    return datetime.now().strftime("%H:%M:%S,%f")
 
-analyzed_domains = set()
 def analyze_domain(domain):
-    if domain in top_domains:
-        return False  # Skip if it's a top domain
-    if domain in analyzed_domains:
-        return False  # Skip analysis if domain was already analyzed
-    analyzed_domains.add(domain)
-    if is_baby_domain(domain):
-        logging.warning(f'Baby domain detected: {domain}')
+    global logged_domains
+    current_timestamp = get_current_timestamp()
+    domain_timestamp = f"{domain}-{current_timestamp}"
+
+    if domain in top_domains or domain in logged_domains:
+        return False  # Skip if it's a top domain or already logged with this timestamp
+
+    logged_domains.add(domain_timestamp)
+
+    if is_baby_domain(domain) or is_malformed_domain(domain):
+        logging.warning(f"{current_timestamp} - Suspicious domain detected: {domain}")
         return True
-    if is_malformed_domain(domain):
-        logging.warning(f'Malformed domain detected: {domain}')
-        return True
+
     probability = freq_counter.probability(domain)[0]
-    if probability < 20:  # Set your threshold here
-        logging.warning(f'Suspicious domain detected (based on probability): {domain} - Probability: {probability}')
+    if probability < 20:
+        logging.warning(f"{current_timestamp} - Suspicious domain detected (based on probability): {domain} - Probability: {probability}")
         return True
+
     return False
 
 # Analyzing DNS logs
