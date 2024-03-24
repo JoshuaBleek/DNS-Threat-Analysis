@@ -17,7 +17,7 @@ logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime
 # Initialize and load the frequency counter
 freq_counter = FreqCounter()
 # freq_counter.load('path_to_your_data_file')  # Load your frequency data
-
+ 
 # Read the top-1m.csv file
 def read_top_domains(filename):
     with open(filename, newline='') as csvfile:
@@ -48,9 +48,13 @@ def extract_domain_names(log_entry):
     matches = re.findall(pattern, log_entry)
     return [match for match in matches if '.' in match and not is_ip_address(match)]
 
+analyzed_domains = set()
 def analyze_domain(domain):
     if domain in top_domains:
         return False  # Skip if it's a top domain
+    if domain in analyzed_domains:
+        return False  # Skip analysis if domain was already analyzed
+    analyzed_domains.add(domain)
     if is_baby_domain(domain):
         logging.warning(f'Baby domain detected: {domain}')
         return True
