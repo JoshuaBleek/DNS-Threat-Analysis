@@ -2,8 +2,7 @@ import csv
 import re
 import logging
 import ipaddress
-import http.client
-import json
+import requests
 from datetime import datetime
 from newfreq import FreqCounter  # Assuming freq3 is your updated frequency analysis module
 
@@ -29,23 +28,26 @@ def read_top_domains(filename):
 
 top_domains = read_top_domains(top_1m_csv_path)
 
-# Placeholder for checking if a domain is a 'baby domain'
-def get_domain_age(domain):
-    conn = http.client.HTTPSConnection("domain-age.p.rapidapi.com")
-    headers = {
-        'X-RapidAPI-Key': "a4e34dc3c3msh760ee3872ebdd85p139d56jsnbf108e6d63a1",
-        'X-RapidAPI-Host': "domain-age.p.rapidapi.com"
-    }
-
+# Function to check if a domain is a 'baby domain'
+def whoapi_request(domain, r, apikey):
     try:
-        conn.request("GET", f"/domain_age/{domain}", headers=headers)
-        res = conn.getresponse()
-        data = res.read()
-        domain_info = json.loads(data.decode("utf-8"))
-        return domain_info.get("age_days", None)  # Assumes 'age_days' is the field name for age in days
+        res = requests.get('https://api.whoapi.com', params={
+            'domain': domain,
+            'r': r,
+            '3737969f04aa091c9b07404ba4c36b13': apikey
+        })
+
+        if res.status_code == 200:
+            data = res.json()
+            if int(data['status']) == 0:
+                return data['date_created']  # Return the creation date of the domain
+            else:
+                logging.error("API reports error: " + data['status_desc'])
+        else:
+            logging.error('Unexpected status code %d' % res.status_code)
     except Exception as e:
-        logging.error(f"Error checking domain age: {e}")
-        return None
+        logging.error("Error in WhoAPI request: " + str(e))
+    return None
 
 def is_ip_address(string):
     try:
@@ -76,18 +78,19 @@ def analyze_domain(domain):
     if domain in top_domains or domain in logged_domains:
         return False  # Skip if it's a top domain or already logged with this timestamp
 
-    logged_domains.add(domain_timestamp
-                       )
-    domain_age = get_domain_age(domain)
-    
-    if domain_age is not None and domain_age < 30:  # Adjust this threshold as needed
-        logging.warning(f"{current_timestamp} - Suspiciously young domain detected: {domain} - Age: {domain_age} days")
+    logged_domains.add(domain_timestamp)
+
+    if is_malformed_domain(domain):
+        logging.warning(f"{current_timestamp} - Malformed domain detected: {domain}")
         return True
 
-    if get_domain_age(domain) or is_malformed_domain(domain):
-        logging.warning(f"{current_timestamp} - Suspicious domain detected: {domain}")
-        return True
+    # WhoAPI check for domain age
+    domain_creation_date = whoapi_request(domain, 'whois', 'your_api_key')
+    if domain_creation_date:
+        # Add logic here to determine if the domain is young (e.g., less than 30 days old)
+        logging.info(f"Domain {domain} was created on {domain_creation_date}")
 
+    # Frequency analysis
     probability = freq_counter.probability(domain)[0]
     if probability < 20:
         logging.warning(f"{current_timestamp} - Suspicious domain detected (based on probability): {domain} - Probability: {probability}")
