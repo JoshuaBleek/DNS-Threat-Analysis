@@ -35,7 +35,7 @@ def whoapi_request(domain, r, apikey):
             'domain': domain,
             'r': r,
             '3737969f04aa091c9b07404ba4c36b13': apikey
-        })
+        }, timeout=10)
 
         if res.status_code == 200:
             data = res.json()
@@ -47,6 +47,10 @@ def whoapi_request(domain, r, apikey):
             logging.error('Unexpected status code %d' % res.status_code)
     except Exception as e:
         logging.error("Error in WhoAPI request: " + str(e))
+    except requests.exceptions.Timeout:
+        logging.error(f"Request timed out for domain: {domain}")
+    except Exception as e:
+        logging.error(f"Error in WhoAPI request for domain {domain}: {str(e)}")
     return None
 
 def is_ip_address(string):
