@@ -2,6 +2,8 @@ import csv
 import re
 import logging
 import ipaddress
+import http.client
+import json
 from datetime import datetime
 from newfreq import FreqCounter  # Assuming freq3 is your updated frequency analysis module
 
@@ -28,9 +30,22 @@ def read_top_domains(filename):
 top_domains = read_top_domains(top_1m_csv_path)
 
 # Placeholder for checking if a domain is a 'baby domain'
-def is_baby_domain(domain):
-    # Implement or integrate an API call here
-    return False
+def get_domain_age(domain):
+    conn = http.client.HTTPSConnection("domain-age.p.rapidapi.com")
+    headers = {
+        'X-RapidAPI-Key': "a4e34dc3c3msh760ee3872ebdd85p139d56jsnbf108e6d63a1",
+        'X-RapidAPI-Host': "domain-age.p.rapidapi.com"
+    }
+
+    try:
+        conn.request("GET", f"/domain_age/{domain}", headers=headers)
+        res = conn.getresponse()
+        data = res.read()
+        domain_info = json.loads(data.decode("utf-8"))
+        return domain_info.get("age_days", None)  # Assumes 'age_days' is the field name for age in days
+    except Exception as e:
+        logging.error(f"Error checking domain age: {e}")
+        return None
 
 def is_ip_address(string):
     try:
@@ -61,9 +76,15 @@ def analyze_domain(domain):
     if domain in top_domains or domain in logged_domains:
         return False  # Skip if it's a top domain or already logged with this timestamp
 
-    logged_domains.add(domain_timestamp)
+    logged_domains.add(domain_timestamp
+                       )
+    domain_age = get_domain_age(domain)
+    
+    if domain_age is not None and domain_age < 30:  # Adjust this threshold as needed
+        logging.warning(f"{current_timestamp} - Suspiciously young domain detected: {domain} - Age: {domain_age} days")
+        return True
 
-    if is_baby_domain(domain) or is_malformed_domain(domain):
+    if get_domain_age(domain) or is_malformed_domain(domain):
         logging.warning(f"{current_timestamp} - Suspicious domain detected: {domain}")
         return True
 
