@@ -35,7 +35,7 @@ def whoapi_request(domain, r, apikey):
             'domain': domain,
             'r': r,
             '3737969f04aa091c9b07404ba4c36b13': apikey
-        }, timeout=10)
+        })
 
         if res.status_code == 200:
             data = res.json()
