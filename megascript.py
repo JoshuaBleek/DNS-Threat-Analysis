@@ -106,12 +106,16 @@ def analyze_domain(domain):
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
 
+# Read the last 100 lines of the log file
 with open(dns_log_file_path, 'r') as log_file:
-    for line in log_file:
-        domains = extract_domain_names(line)
-        for domain in domains:
-            if analyze_domain(domain):
-                suspicious_count += 1
+    lines = log_file.readlines()[-100:]
+
+# Process only the last 100 lines
+for line in lines:
+    domains = extract_domain_names(line)
+    for domain in domains:
+        if analyze_domain(domain):
+            suspicious_count += 1
 
 if suspicious_count == 0:
     logging.info("No suspicious activity detected.")
