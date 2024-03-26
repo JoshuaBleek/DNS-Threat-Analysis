@@ -34,7 +34,7 @@ def whoapi_request(domain, r, apikey):
         res = requests.get('https://api.whoapi.com', params={
             'domain': domain,
             'r': r,
-            '3737969f04aa091c9b07404ba4c36b13': apikey  # Your API key
+            '4887141fc5b83e5aa166c9be3d2fac44': apikey  # Your API key
         })
 
         if res.status_code == 200:
@@ -89,7 +89,7 @@ def analyze_domain(domain):
         return True
 
     # WhoAPI check for domain age
-    domain_creation_date = whoapi_request(domain, 'whois', '3737969f04aa091c9b07404ba4c36b13')
+    domain_creation_date = whoapi_request(domain, 'whois', '4887141fc5b83e5aa166c9be3d2fac44')
     if domain_creation_date:
         # Add logic here to determine if the domain is young (e.g., less than 30 days old)
         logging.info(f"Domain {domain} was created on {domain_creation_date}")
