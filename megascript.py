@@ -8,6 +8,7 @@ from newfreq import FreqCounter  # Assuming freq3 is your updated frequency anal
 
 # File paths and settings
 dns_log_file_path = '/var/log/named/dnsquery.log'
+whitelist_file = 'whitelist_tlds.csv'  # Filename of the whitelist CSV
 logs_folder = 'logs/'
 top_1m_csv_path = 'top-1m.csv'  # Path to top-1m.csv file
 logs_folder = logs_folder.rstrip('/') + '/'
@@ -28,7 +29,32 @@ def read_top_domains(filename):
 
 top_domains = read_top_domains(top_1m_csv_path)
 
+def read_whitelist(filename):
+    with open(filename, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        # Skip header and read TLDs
+        next(reader, None)
+        whitelist = {row[0] for row in reader}
+    return whitelist
+
+whitelist = read_whitelist(whitelist_file)
+
+# Modify the analyze_domain function
+def analyze_domain(domain):
+    global logged_domains
+    current_timestamp = get_current_timestamp()
+    domain_timestamp = f"{domain}-{current_timestamp}"
+
+    if domain in top_domains or domain in logged_domains:
+        return False
+
+    # Check against the whitelist
+    domain_tld = '.' + domain.split('.')[-1]
+    if domain_tld in whitelist:
+        return False
+    
 # Function to check if a domain is a 'baby domain'
+    """
 def whoapi_request(domain, r, apikey):
     try:
         res = requests.get('https://api.whoapi.com', params={
@@ -36,7 +62,7 @@ def whoapi_request(domain, r, apikey):
             'r': r,
             '4887141fc5b83e5aa166c9be3d2fac44': apikey  # Your API key
         })
-
+    
         if res.status_code == 200:
             data = res.json()
             if int(data['status']) == 0:
@@ -52,7 +78,7 @@ def whoapi_request(domain, r, apikey):
     except Exception as e:
         logging.error(f"Error in WhoAPI request for domain {domain}: {str(e)}")
     return None
-
+    """
 def is_ip_address(string):
     try:
         ipaddress.ip_address(string)
@@ -89,6 +115,7 @@ def analyze_domain(domain):
         return True
 
     # WhoAPI check for domain age
+    """
     domain_creation_date = whoapi_request(domain, 'whois', '4887141fc5b83e5aa166c9be3d2fac44')
     if domain_creation_date:
         # Add logic here to determine if the domain is young (e.g., less than 30 days old)
@@ -101,6 +128,7 @@ def analyze_domain(domain):
         return True
 
     return False
+    """
 
 # Analyzing DNS logs
 logging.info("Starting DNS log analysis.")
