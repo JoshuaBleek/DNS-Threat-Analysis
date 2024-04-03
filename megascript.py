@@ -135,7 +135,7 @@ logging.info("Starting DNS log analysis.")
 suspicious_count = 0
 
 with open(dns_log_file_path, 'r') as log_file:
-    lines = log_file.readlines()[-10000000:]
+    lines = log_file.readlines()#[-10000000:]
 
 for line in lines:
     domains = extract_domain_names(line)
