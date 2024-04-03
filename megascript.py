@@ -136,7 +136,7 @@ suspicious_count = 0
 
 # Read the last 100 lines of the log file
 with open(dns_log_file_path, 'r') as log_file:
-    lines = log_file.readlines()[-300:]
+    lines = log_file.readlines()[-1000000:]
 
 # Process only the last 100 lines
 for line in lines:
