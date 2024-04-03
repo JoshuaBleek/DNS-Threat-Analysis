@@ -102,16 +102,16 @@ def get_current_timestamp():
 
 def analyze_domain(domain):
     global logged_domains
-    current_timestamp = get_current_timestamp()
-    domain_timestamp = f"{domain}-{current_timestamp}"
 
+    # Skip if it's a top domain or already logged
     if domain in top_domains or domain in logged_domains:
-        return False  # Skip if it's a top domain or already logged with this timestamp
+        return False
 
-    logged_domains.add(domain_timestamp)
+    current_timestamp = get_current_timestamp()
 
     if is_malformed_domain(domain):
         logging.warning(f"{current_timestamp} - Malformed domain detected: {domain}")
+        logged_domains.add(domain)  # Add domain to logged_domains
         return True
 
     # WhoAPI check for domain age
@@ -134,11 +134,9 @@ def analyze_domain(domain):
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
 
-# Read the last 100 lines of the log file
 with open(dns_log_file_path, 'r') as log_file:
     lines = log_file.readlines()[-5000:]
 
-# Process only the last 100 lines
 for line in lines:
     domains = extract_domain_names(line)
     for domain in domains:
