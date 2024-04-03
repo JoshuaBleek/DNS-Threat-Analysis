@@ -3,8 +3,9 @@ import re
 import logging
 import ipaddress
 import requests
+import whois
 from datetime import datetime
-from newfreq import FreqCounter  # Assuming freq3 is your updated frequency analysis module
+from newfreq import FreqCounter  
 
 # File paths and settings
 dns_log_file_path = '/var/log/named/dnsquery.log'
@@ -39,6 +40,18 @@ def read_whitelist(filename):
 
 whitelist = read_whitelist(whitelist_file)
 
+def is_baby_domain(domain, age_threshold_days=30):
+    try:
+        domain_info = whois.whois(domain)
+        creation_date = domain_info.creation_date
+        if isinstance(creation_date, list):  # Handle multiple dates
+            creation_date = creation_date[0]
+        if (datetime.now() - creation_date).days <= age_threshold_days:
+            return True
+    except Exception as e:
+        logging.error(f"WHOIS lookup failed for {domain}: {str(e)}")
+    return False
+
 # Modify the analyze_domain function
 def analyze_domain(domain):
     global logged_domains
@@ -53,32 +66,16 @@ def analyze_domain(domain):
     if domain_tld in whitelist:
         return False
     
-# Function to check if a domain is a 'baby domain'
-    """
-def whoapi_request(domain, r, apikey):
-    try:
-        res = requests.get('https://api.whoapi.com', params={
-            'domain': domain,
-            'r': r,
-            '4887141fc5b83e5aa166c9be3d2fac44': apikey  # Your API key
-        })
-    
-        if res.status_code == 200:
-            data = res.json()
-            if int(data['status']) == 0:
-                return data['date_created']  # Return the creation date of the domain
-            else:
-                logging.error("API reports error: " + data['status_desc'])
-        else:
-            logging.error('Unexpected status code %d' % res.status_code)
-    except Exception as e:
-        logging.error("Error in WhoAPI request: " + str(e))
-    except requests.exceptions.Timeout:
-        logging.error(f"Request timed out for domain: {domain}")
-    except Exception as e:
-        logging.error(f"Error in WhoAPI request for domain {domain}: {str(e)}")
-    return None
-    """
+ # Baby domain check
+    if is_baby_domain(domain):
+        logging.warning(f"{current_timestamp} - Baby domain detected: {domain}")
+        logged_domains.add(domain)
+        return True
+
+    if is_malformed_domain(domain):
+        logging.warning(f"{current_timestamp} - Malformed domain detected: {domain}")
+        logged_domains.add(domain)  # Add domain to logged_domains
+        return True
 def is_ip_address(string):
     try:
         ipaddress.ip_address(string)
