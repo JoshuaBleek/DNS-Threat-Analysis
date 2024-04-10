@@ -120,7 +120,7 @@ logging.info("Starting DNS log analysis.")
 suspicious_count = 0
 
 with open(dns_log_file_path, 'r') as log_file:
-    lines = log_file.readlines()[-5000:]
+    lines = log_file.readlines()[-1000:]
     total_lines = len(lines)
 
     for i, line in enumerate(lines, start=1):
