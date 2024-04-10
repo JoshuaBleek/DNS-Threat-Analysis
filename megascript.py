@@ -111,6 +111,10 @@ def analyze_domain(domain):
 
     return domain_in_malicious or domain_is_malformed or domain_is_baby
 
+def update_progress(current, total):
+    percentage = (current / total) * 100
+    print(f"\rProgress: {percentage:.2f}%", end='')
+
 # Analyzing DNS logs
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
@@ -124,6 +128,9 @@ with open(dns_log_file_path, 'r') as log_file:
         for domain in domains:
             if analyze_domain(domain):
                 suspicious_count += 1
+        
+        # Update progress for each line processed
+        update_progress(i, total_lines)
 
 if suspicious_count == 0:
     logging.info("No suspicious activity detected.")
