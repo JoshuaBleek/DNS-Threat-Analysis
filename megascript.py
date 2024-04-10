@@ -2,14 +2,13 @@ import csv
 import re
 import logging
 import ipaddress
-import requests
 import whois
 from datetime import datetime
-from newfreq import FreqCounter  
 
 # File paths and settings
 dns_log_file_path = '/var/log/named/dnsquery.log'
 whitelist_file = 'whitelist_tlds.csv'  # Filename of the whitelist CSV
+malicious_domains_file = 'malicious_domains.txt'  # File containing malicious domains
 logs_folder = 'logs/'
 top_1m_csv_path = 'top-1m.csv'  # Path to top-1m.csv file
 logs_folder = logs_folder.rstrip('/') + '/'
@@ -17,8 +16,12 @@ current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 log_filename = f'{logs_folder}dns_monitoring_{current_time}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Load malicious domains from a file
+with open(malicious_domains_file) as file:
+    malicious_domains = set(line.strip().lower() for line in file)
+
 # Initialize and load the frequency counter
-freq_counter = FreqCounter()
+# freq_counter = FreqCounter()
 # freq_counter.load('path_to_your_data_file')  # Load your frequency data
 
 # Read the top-1m.csv file
@@ -52,30 +55,6 @@ def is_baby_domain(domain, age_threshold_days=30):
         logging.error(f"WHOIS lookup failed for {domain}: {str(e)}")
     return False
 
-# Modify the analyze_domain function
-def analyze_domain(domain):
-    global logged_domains
-    current_timestamp = get_current_timestamp()
-    domain_timestamp = f"{domain}-{current_timestamp}"
-
-    if domain in top_domains or domain in logged_domains:
-        return False
-
-    # Check against the whitelist
-    domain_tld = '.' + domain.split('.')[-1]
-    if domain_tld in whitelist:
-        return False
-    
- # Baby domain check
-    if is_baby_domain(domain):
-        logging.warning(f"{current_timestamp} - Baby domain detected: {domain}")
-        logged_domains.add(domain)
-        return True
-
-    if is_malformed_domain(domain):
-        logging.warning(f"{current_timestamp} - Malformed domain detected: {domain}")
-        logged_domains.add(domain)  # Add domain to logged_domains
-        return True
 def is_ip_address(string):
     try:
         ipaddress.ip_address(string)
@@ -100,39 +79,38 @@ def get_current_timestamp():
 def analyze_domain(domain):
     global logged_domains
 
+    current_timestamp = get_current_timestamp()
+
+    # Check for malicious domains
+    if domain.lower() in malicious_domains:
+        logging.warning(f"{current_timestamp} - Malicious domain detected: {domain}")
+        return True
+
     # Skip if it's a top domain or already logged
     if domain in top_domains or domain in logged_domains:
         return False
-
-    current_timestamp = get_current_timestamp()
 
     if is_malformed_domain(domain):
         logging.warning(f"{current_timestamp} - Malformed domain detected: {domain}")
         logged_domains.add(domain)  # Add domain to logged_domains
         return True
 
-    # WhoAPI check for domain age
-    """
-    domain_creation_date = whoapi_request(domain, 'whois', '4887141fc5b83e5aa166c9be3d2fac44')
-    if domain_creation_date:
-        # Add logic here to determine if the domain is young (e.g., less than 30 days old)
-        logging.info(f"Domain {domain} was created on {domain_creation_date}")
-
-    # Frequency analysis
-    probability = freq_counter.probability(domain)[0]
-    if probability < 20:
-        logging.warning(f"{current_timestamp} - Suspicious domain detected (based on probability): {domain} - Probability: {probability}")
+    # Baby domain check
+    if is_baby_domain(domain):
+        logging.warning(f"{current_timestamp} - Baby domain detected: {domain}")
+        logged_domains.add(domain)
         return True
 
+    # Additional checks can be added here
+
     return False
-    """
 
 # Analyzing DNS logs
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
 
 with open(dns_log_file_path, 'r') as log_file:
-    lines = log_file.readlines()#[-10000000:]
+    lines = log_file.readlines()  # Read all lines or last 'n' lines as needed
 
 for line in lines:
     domains = extract_domain_names(line)
