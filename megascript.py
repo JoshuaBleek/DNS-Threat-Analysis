@@ -113,10 +113,13 @@ def update_progress(current, total):
 # Analyzing DNS logs
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
-total_lines = get_file_line_count(dns_log_file_path)
 
 with open(dns_log_file_path, 'r') as log_file:
-    for i, line in enumerate(log_file, start=1):
+    # Read only the last 100 lines
+    lines = log_file.readlines()[-5000:]
+    total_lines = len(lines)
+
+    for i, line in enumerate(lines, start=1):
         domains = extract_domain_names(line)
         for domain in domains:
             if analyze_domain(domain):
