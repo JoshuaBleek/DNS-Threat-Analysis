@@ -49,11 +49,13 @@ def is_baby_domain(domain, age_threshold_days=30):
         creation_date = domain_info.creation_date
         if isinstance(creation_date, list):  # Handle multiple dates
             creation_date = creation_date[0]
-        if (datetime.now() - creation_date).days <= age_threshold_days:
-            return True
+        if creation_date is not None:
+            if (datetime.now() - creation_date).days <= age_threshold_days:
+                return True
     except Exception as e:
         logging.error(f"WHOIS lookup failed for {domain}: {str(e)}")
     return False
+
 
 def is_ip_address(string):
     try:
