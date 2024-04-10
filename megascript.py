@@ -2,6 +2,7 @@ import csv
 import re
 import logging
 import ipaddress
+import math
 import whois
 from datetime import datetime
 
@@ -53,7 +54,6 @@ def is_baby_domain(domain, age_threshold_days=30):
         logging.error(f"WHOIS lookup failed for {domain}: {error_message}")
     return False
 
-
 def is_ip_address(string):
     try:
         ipaddress.ip_address(string)
@@ -75,49 +75,47 @@ logged_domains = set()  # Set to track domains with timestamps that have been lo
 def get_current_timestamp():
     return datetime.now().strftime("%H:%M:%S,%f")
 
+# Set up specific loggers
+loggers = {
+    'malicious': logging.getLogger('malicious'),
+    'malicious_not_topmil': logging.getLogger('malicious_not_topmil'),
+    'malformed_or_high_entropy': logging.getLogger('malformed_or_high_entropy'),
+    'baby_domain': logging.getLogger('baby_domain'),
+}
+
+for key in loggers:
+    loggers[key].setLevel(logging.WARNING)
+    handler = logging.FileHandler(f'{logs_folder}{key}_{current_time}.log')
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    loggers[key].addHandler(handler)
+
 def analyze_domain(domain):
     global logged_domains
-
     current_timestamp = get_current_timestamp()
 
-    # Check for malicious domains
-    if domain.lower() in malicious_domains:
-        logging.warning(f"{current_timestamp} - Malicious domain detected: {domain}")
-        return True
+    domain_in_top_domains = domain in top_domains
+    domain_in_malicious = domain.lower() in malicious_domains
+    domain_is_malformed = is_malformed_domain(domain)
+    domain_is_baby = is_baby_domain(domain)
 
-    # Skip if it's a top domain or already logged
-    if domain in top_domains or domain in logged_domains:
-        return False
+    if domain_in_malicious:
+        loggers['malicious'].warning(f"{current_timestamp} - Malicious domain detected: {domain}")
+        if not domain_in_top_domains:
+            loggers['malicious_not_topmil'].warning(f"{current_timestamp} - Malicious domain not in top million: {domain}")
 
-    if is_malformed_domain(domain):
-        logging.warning(f"{current_timestamp} - Malformed domain detected: {domain}")
-        logged_domains.add(domain)  # Add domain to logged_domains
-        return True
+    if domain_is_malformed and not domain_in_top_domains:
+        loggers['malformed_or_high_entropy'].warning(f"{current_timestamp} - Malformed/high entropy domain: {domain}")
 
-    # Baby domain check
-    if is_baby_domain(domain):
-        logging.warning(f"{current_timestamp} - Baby domain detected: {domain}")
-        logged_domains.add(domain)
-        return True
+    if domain_is_baby and not domain_in_top_domains:
+        loggers['baby_domain'].warning(f"{current_timestamp} - Baby domain detected: {domain}")
 
-    # Additional checks can be added here
-
-    return False
-
-def get_file_line_count(filename):
-    with open(filename, 'r') as file:
-        return sum(1 for _ in file)
-
-def update_progress(current, total):
-    percentage = (current / total) * 100
-    print(f"\rProgress: {percentage:.2f}%", end='')
+    return domain_in_malicious or domain_is_malformed or domain_is_baby
 
 # Analyzing DNS logs
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
 
 with open(dns_log_file_path, 'r') as log_file:
-    # Read only the last 100 lines
     lines = log_file.readlines()[-5000:]
     total_lines = len(lines)
 
@@ -126,9 +124,6 @@ with open(dns_log_file_path, 'r') as log_file:
         for domain in domains:
             if analyze_domain(domain):
                 suspicious_count += 1
-
-        # Update the progress
-        update_progress(i, total_lines)
 
 if suspicious_count == 0:
     logging.info("No suspicious activity detected.")
