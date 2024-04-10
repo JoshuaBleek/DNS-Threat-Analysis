@@ -20,10 +20,6 @@ logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime
 with open(malicious_domains_file) as file:
     malicious_domains = set(line.strip().lower() for line in file)
 
-# Initialize and load the frequency counter
-# freq_counter = FreqCounter()
-# freq_counter.load('path_to_your_data_file')  # Load your frequency data
-
 # Read the top-1m.csv file
 def read_top_domains(filename):
     with open(filename, newline='') as csvfile:
@@ -55,7 +51,6 @@ def is_baby_domain(domain, age_threshold_days=30):
     except Exception as e:
         logging.error(f"WHOIS lookup failed for {domain}: {str(e)}")
     return False
-
 
 def is_ip_address(string):
     try:
@@ -107,18 +102,28 @@ def analyze_domain(domain):
 
     return False
 
+def get_file_line_count(filename):
+    with open(filename, 'r') as file:
+        return sum(1 for _ in file)
+
+def update_progress(current, total):
+    percentage = (current / total) * 100
+    print(f"\rProgress: {percentage:.2f}%", end='')
+
 # Analyzing DNS logs
 logging.info("Starting DNS log analysis.")
 suspicious_count = 0
+total_lines = get_file_line_count(dns_log_file_path)
 
 with open(dns_log_file_path, 'r') as log_file:
-    lines = log_file.readlines()  # Read all lines or last 'n' lines as needed
+    for i, line in enumerate(log_file, start=1):
+        domains = extract_domain_names(line)
+        for domain in domains:
+            if analyze_domain(domain):
+                suspicious_count += 1
 
-for line in lines:
-    domains = extract_domain_names(line)
-    for domain in domains:
-        if analyze_domain(domain):
-            suspicious_count += 1
+        # Update the progress
+        update_progress(i, total_lines)
 
 if suspicious_count == 0:
     logging.info("No suspicious activity detected.")
