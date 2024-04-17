@@ -52,15 +52,21 @@ def is_malformed_domain(domain):
 
 def is_baby_domain(domain, age_threshold_days=30):
     try:
-        domain_info = whois.query(domain)
-        creation_date = domain_info.creation_date
-        if isinstance(creation_date, list):
-            creation_date = creation_date[0]
-        if creation_date is not None and (datetime.now() - creation_date).days <= age_threshold_days:
-            return True
+        # Extract TLD from the domain
+        tld = domain.split('.')[-1]
+        
+        # Check if the TLD is one of the desired TLDs
+        if tld in ['com', 'net', 'edu']:
+            domain_info = whois.query(domain)
+            creation_date = domain_info.creation_date
+            if isinstance(creation_date, list):
+                creation_date = creation_date[0]
+            if creation_date is not None and (datetime.now() - creation_date).days <= age_threshold_days:
+                return True
     except Exception as e:
         loggers['baby_domain'].error(f"WHOIS lookup failed for {domain}: {e}")
     return False
+
 
 
 def extract_domain_names(log_entry):
