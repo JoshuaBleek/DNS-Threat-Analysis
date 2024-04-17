@@ -2,7 +2,6 @@ import csv
 import re
 import logging
 import ipaddress
-import math
 import whois
 from datetime import datetime
 
@@ -21,38 +20,18 @@ logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime
 with open(malicious_domains_file) as file:
     malicious_domains = set(line.strip().lower() for line in file)
 
-# Read the top-1m.csv file
+# Read the top-1m.csv file and return a set of top domains
 def read_top_domains(filename):
     with open(filename, newline='') as csvfile:
         reader = csv.reader(csvfile)
-        top_domains = {row[1] for row in reader}
-    return top_domains
+        return {row[1] for row in reader}
 
 top_domains = read_top_domains(top_1m_csv_path)
 
-def read_whitelist(filename):
-    with open(filename, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader, None)  # Skip header
-        whitelist = {row[0] for row in reader}
-    return whitelist
+# Regular expression to extract domains from log entries
+domain_pattern = re.compile(r'\(([^)]+)\)')
 
-whitelist = read_whitelist(whitelist_file)
-
-def is_baby_domain(domain, age_threshold_days=30):
-    try:
-        domain_info = whois.whois(domain)
-        creation_date = domain_info.creation_date
-        if isinstance(creation_date, list):
-            creation_date = creation_date[0]
-        if creation_date is not None and (datetime.now() - creation_date).days <= age_threshold_days:
-            return True
-    except Exception as e:
-        error_message = str(e).split('\n')[0]  # Process the string outside the f-string
-        logging.error(f"WHOIS lookup failed for {domain}: {error_message}")
-    return False
-
-
+# Check if the string is an IP address
 def is_ip_address(string):
     try:
         ipaddress.ip_address(string)
@@ -60,70 +39,46 @@ def is_ip_address(string):
     except ValueError:
         return False
 
-def is_malformed_domain(domain):
-    pattern = r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$"
-    return not re.match(pattern, domain)
-
+# Extract domain names from log entry using regex
 def extract_domain_names(log_entry):
-    pattern = r'\(([^)]+)\)'
-    matches = re.findall(pattern, log_entry)
+    matches = domain_pattern.findall(log_entry)
     return {match for match in matches if '.' in match and not is_ip_address(match)}
 
-# Set up specific loggers
-loggers = {
-    'malicious': logging.getLogger('malicious'),
-    'malicious_not_topmil': logging.getLogger('malicious_not_topmil'),
-    'malformed_or_high_entropy': logging.getLogger('malformed_or_high_entropy'),
-    'baby_domain': logging.getLogger('baby_domain'),
-}
+# Check if the domain pattern is malformed
+def is_malformed_domain(domain):
+    return not re.match(r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$", domain)
 
-for key in loggers:
-    loggers[key].setLevel(logging.WARNING)
-    handler = logging.FileHandler(f'{logs_folder}{key}_{current_time}.log')
-    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    loggers[key].addHandler(handler)
-
+# Analyze each domain for suspicious characteristics
 def analyze_domain(domain, processed_domains):
     if domain in processed_domains:
         return False
     processed_domains.add(domain)
-
-    domain_in_top_domains = domain in top_domains
-    domain_in_malicious = domain.lower() in malicious_domains
     domain_is_malformed = is_malformed_domain(domain)
-    domain_is_baby = is_baby_domain(domain)
+    domain_in_malicious = domain.lower() in malicious_domains
+    domain_in_top_domains = domain in top_domains
 
-    suspicious = False
-    if domain_in_malicious:
-        loggers['malicious'].warning(f"{datetime.now().strftime('%H:%M:%S,%f')} - Malicious domain detected: {domain}")
-        suspicious = True
-    if not domain_in_top_domains:
-        if domain_is_malformed:
-            loggers['malformed_or_high_entropy'].warning(f"{datetime.now().strftime('%H:%M:%S,%f')} - Malformed/high entropy domain: {domain}")
-        if domain_is_baby:
-            loggers['baby_domain'].warning(f"{datetime.now().strftime('%H:%M:%S,%f')} - Baby domain detected: {domain}")
-    return suspicious
+    if domain_in_malicious or domain_is_malformed or not domain_in_top_domains:
+        logging.warning(f"Malicious or malformed domain detected: {domain}")
+        return True
+    return False
 
-# Analyzing DNS logs
-logging.info("Starting DNS log analysis.")
-suspicious_count = 0
-processed_domains = set()
+# Main function to analyze DNS logs
+def analyze_logs():
+    processed_domains = set()
+    suspicious_count = 0
+    with open(dns_log_file_path, 'r') as log_file:
+        for line in log_file:
+            domains = extract_domain_names(line)
+            for domain in domains:
+                if analyze_domain(domain, processed_domains):
+                    suspicious_count += 1
 
-with open(dns_log_file_path, 'r') as log_file:
-    lines = log_file.readlines()[-10000:]
-    total_lines = len(lines)
+    if suspicious_count == 0:
+        logging.info("No suspicious activity detected.")
+    else:
+        logging.info(f"Analysis complete. {suspicious_count} suspicious domains detected.")
 
-    for i, line in enumerate(lines):
-        domains = extract_domain_names(line)
-        for domain in domains:
-            if analyze_domain(domain, processed_domains):
-                suspicious_count += 1
+    logging.info("DNS log analysis completed.")
 
-        print(f"\rProgress: {((i + 1) / total_lines) * 100:.2f}%", end='')
-
-if suspicious_count == 0:
-    logging.info("No suspicious activity detected.")
-else:
-    logging.info(f"Analysis complete. {suspicious_count} suspicious domains detected.")
-
-logging.info("DNS log analysis completed.")
+# Call the main function
+analyze_logs()
