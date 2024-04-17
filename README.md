@@ -45,10 +45,10 @@ python main.py
 
 ## Configuration
 
-- `dns_log_file_path`: Path to the DNS log file to be analyzed
-- `whitelist_file`: Path to the whitelist file containing whitelisted TLDs
-- `malicious_domains_file`: Path to the file containing known malicious domains
-- `top_1m_csv_path`: Path to the CSV file containing the top 1 million domains
+- `/var/log/named`: Path to the DNS log file to be analyzed (yours may differ from mine depending on configuration)
+- `whitelist_tlds.txt`: Path to the whitelist file containing whitelisted TLDs
+- `malicious_domains.txt`: Path to the file containing known malicious domains
+- `top-1m.csv`: Path to the CSV file containing the top 1 million domains
 
 ## Contributing
 
