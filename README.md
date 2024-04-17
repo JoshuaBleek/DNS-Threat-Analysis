@@ -35,10 +35,10 @@ curl -OJL https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip
 
 ## Usage
 
-1. Run the `dfjia` function from the main script to start analyzing DNS logs:
+1. Run the `analyze_threats.py` script to start analyzing DNS logs:
 
 ```bash
-python main.py
+python3 analyze_threats.py
 ```
 
 2. Monitor the logs generated in the `logs/` folder for analysis results.
