@@ -48,8 +48,10 @@ def is_baby_domain(domain, age_threshold_days=30):
         if creation_date is not None and (datetime.now() - creation_date).days <= age_threshold_days:
             return True
     except Exception as e:
-        logging.error(f"WHOIS lookup failed for {domain}: {str(e).split('\n')[0]}")
+        error_message = str(e).split('\n')[0]  # Process the string outside the f-string
+        logging.error(f"WHOIS lookup failed for {domain}: {error_message}")
     return False
+
 
 def is_ip_address(string):
     try:
