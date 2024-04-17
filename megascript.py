@@ -71,7 +71,6 @@ def extract_domain_names(log_entry):
     unique_domains = {match for match in matches if '.' in match and not is_ip_address(match)}
     return unique_domains
 
-logged_domains = set()  # Set to track domains with timestamps that have been logged
 def get_current_timestamp():
     return datetime.now().strftime("%H:%M:%S,%f")
 
@@ -98,18 +97,20 @@ def analyze_domain(domain):
     domain_is_malformed = is_malformed_domain(domain)
     domain_is_baby = is_baby_domain(domain)
 
+    suspicious = False
     if domain_in_malicious:
         loggers['malicious'].warning(f"{current_timestamp} - Malicious domain detected: {domain}")
-        if not domain_in_top_domains:
-            loggers['malicious_not_topmil'].warning(f"{current_timestamp} - Malicious domain not in top million: {domain}")
+        print(f"Warning: Malicious domain detected: {domain}")
+        suspicious = True
+    if not domain_in_top_domains:
+        if domain_is_malformed:
+            loggers['malformed_or_high_entropy'].warning(f"{current_timestamp} - Malformed/high entropy domain: {domain}")
+            print(f"Warning: Malformed/high entropy domain detected: {domain}")
+        if domain_is_baby:
+            loggers['baby_domain'].warning(f"{current_timestamp} - Baby domain detected: {domain}")
+            print(f"Warning: Baby domain detected: {domain}")
 
-    if domain_is_malformed and not domain_in_top_domains:
-        loggers['malformed_or_high_entropy'].warning(f"{current_timestamp} - Malformed/high entropy domain: {domain}")
-
-    if domain_is_baby and not domain_in_top_domains:
-        loggers['baby_domain'].warning(f"{current_timestamp} - Baby domain detected: {domain}")
-
-    return domain_in_malicious or domain_is_malformed or domain_is_baby
+    return suspicious
 
 def update_progress(current, total):
     percentage = (current / total) * 100
