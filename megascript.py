@@ -82,19 +82,25 @@ def analyze_domain(domain, processed_domains):
         loggers['malicious'].warning(f"Malicious domain detected: {domain}")
         return True
     if domain in top_domains:
+        logging.info(f"WHOIS check skipped for {domain}: Domain in top domains list")
         return False  # Skip WHOIS test if it's in the top domains list
     if domain.endswith('.com') or domain.endswith('.net') or domain.endswith('.edu'):
-        domain_is_malformed = is_malformed_domain(domain)
-        domain_is_baby = is_baby_domain(domain)
-        if domain_is_malformed:
-            loggers['malformed_or_high_entropy'].warning(f"Malformed/high entropy domain detected: {domain}")
-            return True
-        if domain_is_baby:
-            loggers['baby_domain'].warning(f"Baby domain detected: {domain}")
-            return True
-        # If the domain passes WHOIS test, print/log a message
-        logging.info(f"Domain passed WHOIS test: {domain}")
+        logging.info(f"WHOIS check skipped for {domain}: Common TLD")
+        return False  # Skip WHOIS test for common TLDs
+    
+    logging.info(f"Performing WHOIS check for {domain}")  # Log that a WHOIS check is being performed
+    domain_is_malformed = is_malformed_domain(domain)
+    domain_is_baby = is_baby_domain(domain)
+    if domain_is_malformed:
+        loggers['malformed_or_high_entropy'].warning(f"Malformed/high entropy domain detected: {domain}")
+        return True
+    if domain_is_baby:
+        loggers['baby_domain'].warning(f"Baby domain detected: {domain}")
+        return True
+    # If the domain passes WHOIS test, print/log a message
+    logging.info(f"Domain passed WHOIS test: {domain}")
     return False
+
 
 
 
