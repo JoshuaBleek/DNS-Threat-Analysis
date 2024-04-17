@@ -21,6 +21,7 @@ loggers = {
     'malicious': logging.getLogger('malicious'),
     'malformed_or_high_entropy': logging.getLogger('malformed_or_high_entropy'),
     'baby_domain': logging.getLogger('baby_domain'),
+    'non_whitelisted': logging.getLogger('non_whitelisted')  # Add logger for non-whitelisted domains
 }
 
 for key, logger in loggers.items():
@@ -36,6 +37,10 @@ def load_domains(file_path):
 
 malicious_domains = load_domains(malicious_domains_file)
 top_domains = load_domains(top_1m_csv_path)
+
+# Load whitelist domains
+with open(whitelist_file) as whitelist_file:
+    whitelist = set(line.strip().lower() for line in whitelist_file)
 
 # Regular expression for domain extraction
 domain_pattern = re.compile(r'\(([^)]+)\)')
@@ -80,13 +85,10 @@ def analyze_domain(domain, processed_domains):
         loggers['malicious'].warning(f"Malicious domain detected: {domain}")
         return True
     if domain in top_domains:
-        # logging.info(f"WHOIS check skipped for {domain}: Domain in top domains list")  # Commented out line
         return False  # Skip WHOIS test if it's in the top domains list
     if domain.endswith('.com') or domain.endswith('.net') or domain.endswith('.edu'):
-        # logging.info(f"WHOIS check skipped for {domain}: Common TLD")  # Commented out line
         return False  # Skip WHOIS test for common TLDs
     
-    # logging.info(f"Performing WHOIS check for {domain}")  # Commented out line
     domain_is_malformed = is_malformed_domain(domain)
     domain_is_baby = is_baby_domain(domain)
     if domain_is_malformed:
@@ -95,8 +97,9 @@ def analyze_domain(domain, processed_domains):
     if domain_is_baby:
         loggers['baby_domain'].warning(f"Baby domain detected: {domain}")
         return True
-    # If the domain passes WHOIS test, print/log a message
-    logging.info(f"Domain passed WHOIS test: {domain}")
+    # Log DNS traffic for non-whitelisted domains
+    if domain not in whitelist:
+        loggers['non_whitelisted'].info(f"DNS traffic from non-whitelisted domain: {domain}")
     return False
 
 # Analyzing DNS logs
