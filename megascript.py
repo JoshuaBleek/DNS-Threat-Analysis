@@ -82,7 +82,9 @@ def analyze_domain(domain, processed_domains):
         loggers['malformed_or_high_entropy'].warning(f"Malformed/high entropy domain detected: {domain}")
     if domain_is_baby:
         loggers['baby_domain'].warning(f"Baby domain detected: {domain}")
-    return domain_is_malformed or domain_is_baby
+        return True  # Log confirmed baby domain
+    return False
+
 
 # Analyzing DNS logs
 def analyze_logs():
