@@ -47,8 +47,8 @@ python3 threat_analysis.py
 
 - `/var/log/named`: Path to the DNS log file to be analyzed (yours may differ from mine depending on configuration)
 - `whitelist_tlds.txt`: Path to the whitelist file containing whitelisted TLDs
-- `malicious_domains.txt`: Path to the file containing known malicious domains
-- `top-1m.csv`: Path to the CSV file containing the top 1 million domains
+- `malicious_domains.txt`: Path to the file containing known malicious domains (to ensure up to date list you may want to use cron job)
+- `top-1m.csv`: Path to the CSV file containing the top 1 million domains (to ensure up to date list you may want to use cron job)
 
 ## Contributing
 
