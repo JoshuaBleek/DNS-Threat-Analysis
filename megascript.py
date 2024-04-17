@@ -87,9 +87,14 @@ def analyze_domain(domain, processed_domains):
     domain_is_baby = is_baby_domain(domain)
     if domain_is_malformed:
         loggers['malformed_or_high_entropy'].warning(f"Malformed/high entropy domain detected: {domain}")
+        return True
     if domain_is_baby:
         loggers['baby_domain'].warning(f"Baby domain detected: {domain}")
-    return domain_is_malformed or domain_is_baby
+        return True
+    # If the domain passes WHOIS test, print/log a message
+    logging.info(f"Domain passed WHOIS test: {domain}")
+    return False
+
 
 # Analyzing DNS logs
 def analyze_logs():
