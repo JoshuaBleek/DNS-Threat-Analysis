@@ -52,7 +52,7 @@ def is_malformed_domain(domain):
 
 def is_baby_domain(domain, age_threshold_days=30):
     try:
-        domain_info = whois.whois(domain)
+        domain_info = whois.query(domain)
         creation_date = domain_info.creation_date
         if isinstance(creation_date, list):
             creation_date = creation_date[0]
@@ -61,6 +61,7 @@ def is_baby_domain(domain, age_threshold_days=30):
     except Exception as e:
         loggers['baby_domain'].error(f"WHOIS lookup failed for {domain}: {e}")
     return False
+
 
 def extract_domain_names(log_entry):
     matches = domain_pattern.findall(log_entry)
