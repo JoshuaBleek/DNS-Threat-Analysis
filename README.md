@@ -11,7 +11,7 @@ This project is a DNS traffic monitoring tool designed to analyze DNS logs and d
 - Identifies malformed or high-entropy domains
 - Detects "baby" domains (recently created domains)
 - Logs DNS traffic from non-whitelisted domains for further analysis
-- Provides detailed logging with timestamps and severity levels
+- Provides detailed logging with timestamps
 
 ## Dependencies
 
@@ -30,10 +30,8 @@ git clone https://github.com/your_username/dns-traffic-monitoring.git
 2. Install the required dependencies:
 
 ```bash
-pip install -r requirements.txt
+curl -OJL https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip
 ```
-
-3. Ensure that the log file paths and settings in `config.py` are correctly configured according to your environment.
 
 ## Usage
 
