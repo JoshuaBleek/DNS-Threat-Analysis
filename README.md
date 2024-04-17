@@ -24,7 +24,7 @@ This project is a DNS traffic monitoring tool designed to analyze DNS logs and d
 1. Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/your_username/dns-traffic-monitoring.git
+git@github.com:JoshuaBleek/DNS-Threat-Analysis.git
 ```
 
 2. Install top-1mil.csv (it was too big for github):
