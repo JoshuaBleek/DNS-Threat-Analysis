@@ -97,7 +97,7 @@ def analyze_logs():
                 if analyze_domain(domain, processed_domains):
                     suspicious_count += 1
             if line_count % 100 == 0:  # Update progress every 100 lines
-                logging.info(f"Progress: Processed {line_count} lines.")
+                print(f"Progress: Processed {line_count} lines.")  # Print progress updates to command line
 
     logging.info(f"DNS log analysis completed. {suspicious_count} suspicious domains detected.")
 
