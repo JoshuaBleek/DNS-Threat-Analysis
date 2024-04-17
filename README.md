@@ -27,7 +27,7 @@ This project is a DNS traffic monitoring tool designed to analyze DNS logs and d
 git clone https://github.com/your_username/dns-traffic-monitoring.git
 ```
 
-2. Install the required dependencies:
+2. Install top-1mil.csv (it was too big for github):
 
 ```bash
 curl -OJL https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip
@@ -35,7 +35,7 @@ curl -OJL https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip
 
 ## Usage
 
-1. Run the `analyze_logs()` function from the main script to start analyzing DNS logs:
+1. Run the `dfjia` function from the main script to start analyzing DNS logs:
 
 ```bash
 python main.py
