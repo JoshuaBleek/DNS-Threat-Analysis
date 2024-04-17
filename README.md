@@ -7,7 +7,7 @@ This project is a DNS traffic monitoring tool designed to analyze DNS logs and d
 ## Features
 
 - Analyzes DNS logs from a specified log file (`/var/log/named`)
-- Detects and logs malicious domains based on a list of known malicious domains (`malicious_domains_file`)
+- Detects and logs malicious domains based on a list of known malicious domains (`malicious_domains.txt`)
 - Identifies malformed or high-entropy domains
 - Detects "baby" domains (recently created domains)
 - Logs DNS traffic from non-whitelisted domains for further analysis
