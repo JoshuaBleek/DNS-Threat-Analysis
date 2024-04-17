@@ -59,3 +59,5 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 1. The `malicious_domains.txt` file used in this project was obtained from [stamparm/blackbook](https://github.com/stamparm/blackbook).
 
 2. The `top-1m.csv.zip` file used in this project was downloaded from [Cisco Umbrella](https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip).
+
+3. My main man Karl G. who oversaw and guided me through this project
