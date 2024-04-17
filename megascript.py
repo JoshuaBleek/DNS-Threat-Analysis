@@ -58,14 +58,9 @@ def is_baby_domain(domain, age_threshold_days=30):
             creation_date = creation_date[0]
         if creation_date is not None and (datetime.now() - creation_date).days <= age_threshold_days:
             return True
-    except whois.exceptions.UnknownTld:
-        logging.error(f"Unknown TLD for domain {domain}")
-        pass  # Ignore WHOIS lookup errors for unknown TLDs
     except Exception as e:
-        logging.error(f"Error occurred during WHOIS lookup for {domain}: {e}")
-        loggers['baby_domain'].error(f"Error occurred during WHOIS lookup for {domain}: {e}")
+        loggers['baby_domain'].error(f"WHOIS lookup failed for {domain}: {e}")
     return False
-
 
 def extract_domain_names(log_entry):
     matches = domain_pattern.findall(log_entry)
@@ -87,9 +82,7 @@ def analyze_domain(domain, processed_domains):
         loggers['malformed_or_high_entropy'].warning(f"Malformed/high entropy domain detected: {domain}")
     if domain_is_baby:
         loggers['baby_domain'].warning(f"Baby domain detected: {domain}")
-        return True  # Log confirmed baby domain
-    return False
-
+    return domain_is_malformed or domain_is_baby
 
 # Analyzing DNS logs
 def analyze_logs():
