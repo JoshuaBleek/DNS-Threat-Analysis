@@ -1,4 +1,4 @@
-# DNS Traffic Monitoring Tool
+# DNS Threat Analysis Tool
 
 ## Overview
 
@@ -35,10 +35,10 @@ curl -OJL https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip
 
 ## Usage
 
-1. Run the `analyze_threats.py` script to start analyzing DNS logs:
+1. Run the `threat_analysis.py` script to start analyzing DNS logs:
 
 ```bash
-python3 analyze_threats.py
+python3 threat_analysis.py
 ```
 
 2. Monitor the logs generated in the `logs/` folder for analysis results.
@@ -54,6 +54,8 @@ python3 analyze_threats.py
 
 Contributions are welcome! If you'd like to contribute to this project, please fork the repository, make your changes, and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
 
-## License
+## Credit
 
-This project is licensed under the [MIT License](LICENSE).
+1. The `malicious_domains.txt` file used in this project was obtained from [stamparm/blackbook](https://github.com/stamparm/blackbook).
+
+2. The `top-1m.csv.zip` file used in this project was downloaded from [Cisco Umbrella](https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip).
