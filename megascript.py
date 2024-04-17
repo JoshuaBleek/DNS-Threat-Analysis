@@ -13,9 +13,8 @@ logs_folder = 'logs/'
 top_1m_csv_path = 'top-1m.csv'
 logs_folder = logs_folder.rstrip('/') + '/'
 current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-# Basic logging configuration
-logging.basicConfig(filename=f'{logs_folder}dns_monitoring_{current_time}.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+log_filename = f'{logs_folder}dns_monitoring_{current_time}.log'
+logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Specific loggers for different types of domain checks
 loggers = {
@@ -88,14 +87,19 @@ def analyze_domain(domain):
 
 # Analyzing DNS logs
 def analyze_logs():
-    suspicious_count = 0
     with open(dns_log_file_path, 'r') as log_file:
-        for i, line in enumerate(log_file):
-            domains = extract_domain_names(line)
-            for domain in domains:
-                if analyze_domain(domain):
-                    suspicious_count += 1
-            logging.info(f"Processed line {i+1}: {line.strip()}")
+        lines = log_file.readlines()
+    total_lines = len(lines)
+    processed_domains = set()
+    suspicious_count = 0
+
+    for i, line in enumerate(lines):
+        domains = extract_domain_names(line)
+        for domain in domains:
+            if analyze_domain(domain):
+                suspicious_count += 1
+        progress = ((i + 1) / total_lines) * 100
+        print(f"\rProgress: {progress:.2f}% - Processed {i+1} of {total_lines} lines", end='')
 
     logging.info(f"DNS log analysis completed. {suspicious_count} suspicious domains detected.")
 
