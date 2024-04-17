@@ -16,11 +16,18 @@ current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 log_filename = f'{logs_folder}dns_monitoring_{current_time}.log'
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Define functions before they are used
+def read_top_domains(filename):
+    with open(filename, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        return {row[1] for row in reader}
+
+# Load top domains from a file
+top_domains = read_top_domains(top_1m_csv_path)
+
 # Load malicious domains from a file
 with open(malicious_domains_file) as file:
     malicious_domains = set(line.strip().lower() for line in file)
-
-top_domains = read_top_domains(top_1m_csv_path)
 
 # Regular expression to extract domains from log entries
 domain_pattern = re.compile(r'\(([^)]+)\)')
@@ -71,12 +78,6 @@ def analyze_logs():
         logging.info(f"Analysis complete. {suspicious_count} suspicious domains detected.")
 
     logging.info("DNS log analysis completed.")
-
-# Read top-1m.csv file
-def read_top_domains(filename):
-    with open(filename, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        return {row[1] for row in reader}
 
 # Call the main function
 analyze_logs()
